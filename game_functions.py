@@ -2,6 +2,8 @@ import sys
 
 import pygame
 
+from random import randint
+
 from bullet import Bullet
 from alien import Alien
 
@@ -58,15 +60,29 @@ def check_keyup_events(event, ship):
         ship.moving_down = False
 
 
-def update_bullets(bulltes):
+def update_bullets(ai_settings, screen, ship, aliens, bullets):
     """更新子弹的位置，并删除已消失的子弹"""
     # 更新子弹的位置
-    bulltes.update()
+    bullets.update()
 
     # 删除已经消失的子弹
-    for bullet in bulltes.copy():
+    for bullet in bullets.copy():
         if bullet.rect.bottom <= 0:
-            bulltes.remove(bullet)
+            bullets.remove(bullet)
+    
+    check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets)
+
+
+def check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets):
+    """响应子弹和外星人的碰撞"""
+    # 检查是否有子弹击中了外星人
+    # 如果是这样，就删除对应的子弹和外星人
+    collisions = pygame.sprite.groupcollide(bullets, aliens, True, True)
+
+    if len(aliens) == 0:
+        # 删除现有的子弹并新建一群新的外星人
+        bullets.empty()
+        create_fleet(ai_settings, screen, ship, aliens)
 
 
 def update_screen(ai_settings, screen, ship, aliens, bullets):
@@ -115,13 +131,13 @@ def create_fleet(ai_settings, screen, ship, aliens):
     # 创建一个外星人，并计算一行可容纳多少个外星人
     alien = Alien(ai_settings, screen)
     number_aliens_x = get_number_aliens_x(ai_settings, alien.rect.width)
-    number_rows = get_number_rows(ai_settings, ship.rect.height,    
+    number_rows = get_number_rows(ai_settings, ship.rect.height,
         alien.rect.height)
 
     # 创建第一行外星人
     for row_number in range(number_rows):
         for alien_number in range(number_aliens_x):
-            create_alien(ai_settings, screen, aliens, alien_number,	row_number)
+            create_alien(ai_settings, screen, aliens, alien_number, row_number)
 
 
 def change_fleet_direction(ai_settings, aliens):
@@ -139,10 +155,7 @@ def check_fleet_edges(ai_settings, aliens):
             break
 
 
-def update_aliens(ai_settings, aliens, screen):
+def update_aliens(ai_settings, aliens):
     """更新外星人群中所有外星人的位置"""
-    # check_fleet_edges(ai_settings, aliens)
+    check_fleet_edges(ai_settings, aliens)
     aliens.update()
-
-    for alien in aliens.copy():
-        if alien.rect.bottom > screen.
